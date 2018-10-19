@@ -1,0 +1,196 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+labels:
+  app: proactive
+metadata:
+  name: proactive
+objects:
+- apiVersion: v1
+  kind: Route
+  metadata:
+    annotations:
+      haproxy.router.openshift.io/timeout: 4m
+      template.openshift.io/expose-uri: http://{.spec.host}{.spec.path}
+    name: proactive-scheduler
+  spec:
+    tls:
+      insecureEdgeTerminationPolicy: Redirect
+      termination: edge
+    to:
+      kind: Service
+      name: proactive-scheduler
+    port:
+      targetPort: web
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    name: proactive-scheduler
+  spec:
+    replicas: 1
+    selector:
+      name: proactive-scheduler
+    strategy:
+      type: Recreate
+      activeDeadlineSeconds: 21600
+    template:
+      metadata:
+        labels:
+          name: proactive-scheduler
+      spec:
+        containers:
+          - image: ${SCHEDULER_IMAGE}
+            imagePullPolicy: IfNotPresent
+            name: proactive-scheduler
+            ports:
+              - containerPort: 8080
+                protocol: TCP
+              - containerPort: 64738
+                protocol: TCP
+            resources:
+              limits:
+                cpu: 1
+                memory: 6Gi
+            terminationMessagePath: /dev/termination-log
+            terminationMessagePolicy: File
+            volumeMounts:
+              - mountPath: /home/paserver/data/scheduling/data
+                name: proactive-data
+              - mountPath: /home/paserver/data/scheduling/logs
+                name: proactive-scheduler-logs
+              - mountPath: /tmp
+                name: proactive-scheduler-tmp
+              - mountPath: /home/paserver/data/scheduling/samples/workflows
+                name: proactive-examples
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        serviceAccountName: proactive-scheduler
+        volumes:
+          - name: proactive-data
+            persistentVolumeClaim:
+              claimName: proactive-data
+          - name: proactive-scheduler-logs
+            persistentVolumeClaim:
+              claimName: proactive-scheduler-logs
+          - name: proactive-scheduler-tmp
+            persistentVolumeClaim:
+              claimName: proactive-scheduler-tmp
+          - name: proactive-examples
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    name: proactive-node
+  spec:
+    replicas: 4
+    selector:
+      name: proactive-node
+    strategy:
+      type: Recreate
+      activeDeadlineSeconds: 21600
+    template:
+      metadata:
+        labels:
+          name: proactive-node
+      spec:
+        containers:
+          - image: ${NODE_IMAGE}
+            imagePullPolicy: IfNotPresent
+            name: proactive-node
+            args:
+              - '-r'
+              - 'pnp://proactive-scheduler:64738'
+            ports:
+              - containerPort: 64738 # PNP
+                protocol: TCP
+            resources:
+              limits:
+                cpu: 1
+                memory: 2Gi
+            terminationMessagePath: /dev/termination-log
+            terminationMessagePolicy: File
+            volumeMounts:
+              - mountPath: /home/paserver/data/scheduling/logs
+                name: proactive-nodes-logs
+              - mountPath: /tmp
+                name: proactive-node-tmp
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        volumes:
+          - name: proactive-nodes-logs
+            persistentVolumeClaim:
+              claimName: proactive-nodes-logs
+          - name: proactive-node-tmp
+- apiVersion: v1
+  kind: ServiceAccount
+  metadata:
+    annotations:
+      serviceaccounts.openshift.io/oauth-redirectreference.proactive-scheduler: '{"kind":"OAuthRedirectReference","apiVersion":"v1","reference":{"kind":"Route","name":"proactive-scheduler"}}'
+    name: proactive-scheduler
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+    name: proactive-scheduler
+  spec:
+    ports:
+    - name: web
+      nodePort: 0
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+    - name: pnp
+      port: 64738
+      protocol: TCP
+      targetPort: 64738
+    selector:
+      name: proactive-scheduler
+    sessionAffinity: None
+    type: ClusterIP
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    name: proactive-data
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    resources:
+      requests:
+        storage: 1Gi
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    name: proactive-scheduler-logs
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    resources:
+      requests:
+        storage: 1Gi
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    name: proactive-nodes-logs
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    resources:
+      requests:
+        storage: 1Gi
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    name: proactive-scheduler-tmp
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    resources:
+      requests:
+        storage: 1Gi
+parameters:
+- displayName: Proactive Scheduler Image
+  value: "activeeon/proactive-scheduler:8.4.0-SNAPSHOT-trial"
+  name: SCHEDULER_IMAGE
+  required: true
+- displayName: Proactive Node Image
+  value: "activeeon/proactive-node:8.4.0-SNAPSHOT-trial"
+  name: NODE_IMAGE
+  required: true
