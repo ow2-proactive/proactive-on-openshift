@@ -48,8 +48,6 @@ objects:
                 protocol: TCP
             resources:
               limits:
-#                cpu: ${SCHEDULER_CPU}
-#                memory: ${SCHEDULER_MEMORY}
             terminationMessagePath: /dev/termination-log
             terminationMessagePolicy: File
             volumeMounts:
@@ -103,8 +101,6 @@ objects:
                 protocol: TCP
             resources:
               limits:
-#                cpu: ${NODE_CPU}
-#                memory: ${NODE_MEMORY}
             terminationMessagePath: /dev/termination-log
             terminationMessagePolicy: File
             volumeMounts:
