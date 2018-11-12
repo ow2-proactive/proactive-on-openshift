@@ -48,8 +48,6 @@ objects:
                 protocol: TCP
             resources:
               limits:
-                cpu: ${SCHEDULER_CPU}
-                memory: ${SCHEDULER_MEMORY}
             terminationMessagePath: /dev/termination-log
             terminationMessagePolicy: File
             volumeMounts:
@@ -103,8 +101,6 @@ objects:
                 protocol: TCP
             resources:
               limits:
-                cpu: ${NODE_CPU}
-                memory: ${NODE_MEMORY}
             terminationMessagePath: /dev/termination-log
             terminationMessagePolicy: File
             volumeMounts:
@@ -190,27 +186,11 @@ parameters:
   value: "activeeon/proactive-scheduler:8.4.0-SNAPSHOT-trial"
   name: SCHEDULER_IMAGE
   required: true
-- displayName: Proactive Scheduler CPU
-  value: "1"
-  name: SCHEDULER_CPU
-  required: true
-- displayName: Proactive Scheduler Memory
-  value: "6Gi"
-  name: SCHEDULER_MEMORY
-  required: true
 - displayName: Proactive Node Image
   value: "activeeon/proactive-node:8.4.0-SNAPSHOT-trial"
   name: NODE_IMAGE
   required: true
 - displayName: Proactive Node Replicas
-  value: "4"
+  value: "2"
   name: NODE_REPLICAS
-  required: true
-- displayName: Proactive Node CPU
-  value: "1"
-  name: NODE_CPU
-  required: true
-- displayName: Proactive Node Memory
-  value: "2Gi"
-  name: NODE_MEMORY
   required: true
