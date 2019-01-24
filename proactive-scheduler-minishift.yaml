@@ -183,11 +183,11 @@ objects:
         storage: 1Gi
 parameters:
 - displayName: Proactive Scheduler Image
-  value: "activeeon/proactive-scheduler:8.4.0-SNAPSHOT-trial"
+  value: "activeeon/proactive-scheduler:8.4.0-SNAPSHOT-all-tasks"
   name: SCHEDULER_IMAGE
   required: true
 - displayName: Proactive Node Image
-  value: "activeeon/proactive-node:8.4.0-SNAPSHOT-trial"
+  value: "activeeon/proactive-node:8.4.0-SNAPSHOT-all-tasks"
   name: NODE_IMAGE
   required: true
 - displayName: Proactive Node Replicas
