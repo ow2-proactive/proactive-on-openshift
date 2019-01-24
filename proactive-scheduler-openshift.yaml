@@ -39,7 +39,7 @@ objects:
       spec:
         containers:
           - image: ${SCHEDULER_IMAGE}
-            imagePullPolicy: IfNotPresent
+            imagePullPolicy: Always
             name: proactive-scheduler
             ports:
               - containerPort: 8080
@@ -93,7 +93,7 @@ objects:
       spec:
         containers:
           - image: ${NODE_IMAGE}
-            imagePullPolicy: IfNotPresent
+            imagePullPolicy: Always
             name: proactive-node
             args:
               - '-r'
@@ -187,7 +187,7 @@ objects:
         storage: 1Gi
 parameters:
 - displayName: Proactive Scheduler Image
-  value: "activeeon/proactive-scheduler:8.4.0-SNAPSHOT-trial"
+  value: "activeeon/proactive-scheduler:8.4.0-SNAPSHOT-all-tasks"
   name: SCHEDULER_IMAGE
   required: true
 - displayName: Proactive Scheduler CPU
@@ -199,7 +199,7 @@ parameters:
   name: SCHEDULER_MEMORY
   required: true
 - displayName: Proactive Node Image
-  value: "activeeon/proactive-node:8.4.0-SNAPSHOT-trial"
+  value: "activeeon/proactive-node:8.4.0-SNAPSHOT-all-tasks"
   name: NODE_IMAGE
   required: true
 - displayName: Proactive Node Replicas
